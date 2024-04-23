@@ -5,15 +5,18 @@ include 'database.php';
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Prepare SQL statement
-    $stmt = $conn->prepare("INSERT INTO student (firstName, lastName, email, phone, gender, dob, address) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO student (firstName, lastName, email, phone, gender, dob, address, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     // Check for errors in preparing the statement
     if ($stmt === false) {
         die("Error in preparing SQL statement: " . $conn->error);
     }
 
+    // Hash the password
+    $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
+
     // Bind parameters
-    $stmt->bind_param("sssssss", $firstName, $lastName, $email, $phone, $gender, $dob, $address);
+    $stmt->bind_param("ssssssss", $firstName, $lastName, $email, $phone, $gender, $dob, $address, $password);
 
     // Set parameters
     $firstName = $_POST["firstName"];
@@ -26,7 +29,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Execute statement
     if ($stmt->execute()) {
-        echo "Registration successful!";
+        echo "Registration successful! Redirecting to login page in 2 seconds...";
+        echo '<script>
+                setTimeout(function() {
+                    window.location.href = "login.php";
+                }, 2000);
+              </script>';
+        exit(); 
     } else {
         echo "Error: " . $stmt->error;
     }
@@ -69,7 +78,8 @@ $conn->close();
         input[type="email"],
         input[type="tel"],
         select,
-        textarea {
+        textarea,
+        input[type="password"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ccc;
@@ -105,7 +115,7 @@ $conn->close();
         <input type="email" id="email" name="email" required>
 
         <label for="phone">Phone:</label>
-        <input type="tel" id="phone" name="phone" placeholder="phone no" required>
+        <input type="tel" id="phone" name="phone" placeholder="Phone no" required>
 
         <label for="gender">Gender:</label>
         <select id="gender" name="gender" required>
@@ -120,6 +130,9 @@ $conn->close();
 
         <label for="address">Address:</label>
         <textarea id="address" name="address" rows="4" required></textarea>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
 
         <input type="submit" value="Submit">
     </form>
